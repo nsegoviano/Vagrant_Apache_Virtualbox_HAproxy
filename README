@@ -1,0 +1,129 @@
+#-----------------------------------
+#  Instructions for setting up load balancer using HAProxy and Apache server on a test environment. 
+#  Creator:
+#  Nicolas Segoviano 01/11/2019
+#-----------------------------------
+
+Vagrant Image used:
+    ubuntu/trusty64
+Number of instances:
+    3: proxy1; web1; web2
+    
+Network information:
+Using private ip addresss schema for all 3 images and they must be in the same network.
+IP's already hardcoded below info is just for information.
+
+    Proxy1(frontend): 192.168.50.101
+    web1(backend): 192.168.50.102
+    web2(backend): 193.168.50.103
+
+Requirements:
+    Internet access, needed for downloading ubuntu vagrant image as well as Apache and HAProxy servers during the bootstrap process.
+    Vagrant, I am using 2.2.2 for this project.
+    ubuntu/trusty64 image, this image can be downloaded from Vagrant's website.
+
+
+Instructions for installing Vagrant:
+https://www.vagrantup.com/intro/getting-started/install.html
+
+Once Vagrant is install proceed with the below steps.
+
+#----------------------------------
+#  Download Vagrant image
+#----------------------------------
+
+vagrant box add ubuntu/trusty64
+
+#----------------------------------
+#  Untar the provided tgz file inside in an empty directory, there should be the following 3 scripts:
+#----------------------------------   
+
+    1 Vagrantfile
+    1 bootstrap.sh
+    1 proxy_bootstrap.sh
+
+#----------------------------------
+#  Start images by issuing the following command:
+#----------------------------------
+   
+    vagrant up
+
+if ubuntu/trusty64 was downloaded ahead of time the configuring process should not take long, oterwhise Vagrant will download the image prior to starting the images.
+
+#----------------------------------
+#  Once done vagrant status command should retun the following:
+#----------------------------------
+
+    vagrant status
+    Current machine states:
+    web1                    running (virtualbox)
+    web2                    running (virtualbox)
+    proxy1                  running (virtualbox)
+
+#---------------------------------
+#  To access each individual machine issue vagrant ssh +  machine name:
+#---------------------------------
+   
+    vagrant ssh proxy1
+
+#----------------------------------
+#now we can use curl to test if the proxy server is functioning properly using the proxy's ip address:
+#---------------------------------- 
+  
+Issue the following command at least twice:
+    curl http://192.168.50.101/hello.php 
+    result:
+    The proxy server should return the ip address and server name for each instance of the Apache servers configured one at the time in a round robin fashion as configured.
+
+$ curl http://192.168.50.101/hello.php
+
+Hello World!
+Host name: web1
+$ curl http://192.168.50.101/hello.php
+
+Hello World!
+Host name: web2
+
+
+#----------------------------------
+#  To perform a test, ssh in to one of the backend servers and stop Apache:
+#----------------------------------
+    
+    vagrant ssh web1
+    
+    stop apache:
+    sudo service apache2 stop
+    
+or suspend the machine:
+    
+    vagrant suspend web1
+
+#-----------------------------------
+#  issue curl command again:
+#-----------------------------------
+
+    curl http://192.168.50.101/hello.php
+    This time only the other instance of Apache(web2) will be listed.
+    Repeat as needed.
+
+#-----------------------------------
+#  Once done stop the images from using resources.
+#-----------------------------------
+
+   $ vagrant destroy
+   Hit Y/y for every instance.
+
+#------------------------------------
+# The following links have been used as a reference for this project:
+#------------------------------------
+
+https://www.vagrantup.com/docs/networking/private_network.html
+https://www.linode.com/docs/uptime/loadbalancing/how-to-use-haproxy-for-load-balancing/
+http://www.thisprogrammingthing.com/2015/multiple-vagrant-vms-in-one-vagrantfile/
+https://gist.github.com/asmerkin/df919a6a79b081512366
+https://www.vagrantup.com/docs/multi-machine/
+https://www.dev-metal.com/super-simple-vagrant-lamp-stack-bootstrap-installable-one-command/
+https://www.digitalocean.com/community/tutorials/how-to-use-haproxy-to-set-up-http-load-balancing-on-an-ubuntu-vps#configuring-haproxy
+   
+
+
